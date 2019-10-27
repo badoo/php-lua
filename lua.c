@@ -54,6 +54,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_lua_include, 0, 0, 1)
 	ZEND_ARG_INFO(0, file)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_lua_loadstring, 0, 0, 2)
+	ZEND_ARG_INFO(0, statements)
+	ZEND_ARG_INFO(0, chunk_name)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_lua_eval, 0, 0, 1)
 	ZEND_ARG_INFO(0, statements)
 ZEND_END_ARG_INFO()
@@ -653,6 +658,32 @@ PHP_METHOD(lua, eval) {
 }
 /* }}} */
 
+
+/** {{{ proto Lua::loadstring(string $lua_chunk, string $chunk_name)
+ * Loads a string into Lua state
+ */
+PHP_METHOD(lua, loadstring) {
+	lua_State *L;
+	char *statements;
+	char *chunk_name;
+	long bp, len, len2;
+	int ret;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &statements, &len, &chunk_name, &len2) == FAILURE) {
+		return;
+	}
+
+	L = (Z_LUAVAL_P(getThis()))->L;
+
+	bp = lua_gettop(L);
+	if ((ret = luaL_loadbuffer(L, statements, len, chunk_name)) != LUA_OK) {
+		zend_throw_exception_ex(lua_exception_ce, ret, "%s", lua_tostring(L, -1));
+		lua_pop(L, 1);
+		RETURN_FALSE;
+	}
+}
+/* }}} */
+
 /** {{{ proto Lua::include(string $file)
  * run a lua script file
  */
@@ -802,6 +833,7 @@ zend_function_entry lua_class_methods[] = {
 	PHP_ME(lua, __construct,		NULL,  					ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(lua, eval,          		arginfo_lua_eval,  		ZEND_ACC_PUBLIC)
 	PHP_ME(lua, include,			arginfo_lua_include, 	ZEND_ACC_PUBLIC)
+	PHP_ME(lua, loadstring,			arginfo_lua_loadstring, ZEND_ACC_PUBLIC)
 	PHP_ME(lua, call,				arginfo_lua_call,  		ZEND_ACC_PUBLIC)
 	PHP_ME(lua, assign,				arginfo_lua_assign,		ZEND_ACC_PUBLIC)
 	PHP_ME(lua, getVersion,			NULL, 					ZEND_ACC_PUBLIC|ZEND_ACC_ALLOW_STATIC)
