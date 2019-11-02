@@ -1,0 +1,30 @@
+name: Run tests
+# This workflow is triggered on pushes to the repository.
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: apt-get update
+        run: sudo apt-get update
+      - name: Install PHP and Lua
+        run: |
+          sudo apt-get install php-dev lua5.3 liblua5.3-dev php-json
+          sudo update-alternatives --install /usr/bin/lua lua-interpreter /usr/bin/lua5.3 130 --slave /usr/share/man/man1/lua.1.gz lua-manual /usr/share/man/man1/lua5.3.1.gz
+      - name: configure
+        run: |
+          cd /home/runner/work/php-lua/php-lua/ 
+          phpize
+          ./configure --with-lua --with-lua-version=5.3
+      - name: make
+        run: make
+      - name: test
+        run: make test
+
+
+        # PHP 7.3 (PHP 7.3.9-1+ubuntu16.04.1+deb.sury.org+1 (cli) (built: Sep 2 2019 12:54:04) ( NTS ))
