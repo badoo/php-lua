@@ -14,7 +14,7 @@ jobs:
         run: sudo apt-get update
       - name: Install PHP and Lua
         run: |
-          sudo apt-get install php-dev lua5.3 liblua5.3-dev php-json
+          sudo apt-get install php-dev php-phpdbg lua5.3 liblua5.3-dev php-json
           sudo update-alternatives --install /usr/bin/lua lua-interpreter /usr/bin/lua5.3 130 --slave /usr/share/man/man1/lua.1.gz lua-manual /usr/share/man/man1/lua5.3.1.gz
       - name: configure
         run: |
