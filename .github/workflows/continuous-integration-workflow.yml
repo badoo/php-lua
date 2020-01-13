@@ -24,7 +24,14 @@ jobs:
       - name: make
         run: make
       - name: test
-        run: make test
-
+        run: |
+          catch() {
+              for i in tests/*.out; do
+                echo "======  output for $i ======"
+                cat $i
+              done
+           }
+           trap 'catch' ERR
+           make test
 
         # PHP 7.3 (PHP 7.3.9-1+ubuntu16.04.1+deb.sury.org+1 (cli) (built: Sep 2 2019 12:54:04) ( NTS ))
