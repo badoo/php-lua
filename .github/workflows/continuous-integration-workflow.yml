@@ -31,6 +31,11 @@ jobs:
                  cat $i
               done
               exit 1
+      - name: Upload test result
+        uses: actions/upload-artifact@v1
+        with:
+          name: test
+          path: tests/*
 
 
         # PHP 7.3 (PHP 7.3.9-1+ubuntu16.04.1+deb.sury.org+1 (cli) (built: Sep 2 2019 12:54:04) ( NTS ))
