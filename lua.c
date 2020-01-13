@@ -25,6 +25,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "Zend/zend_exceptions.h"
+#include "Zend/zend_interfaces.h"
 #include "php_lua.h"
 #include "lua_closure.h"
 
@@ -290,14 +291,48 @@ static int php_lua_call_callback(lua_State *L) {
 		}
 
 		call_user_function(EG(function_table), NULL, func, &retval, arg_num, params);
+
+		if (EG(exception)) {
+			zval tmp;
+			zval exception;
+
+			ZVAL_OBJ(&exception, EG(exception));
+			Z_ADDREF(exception);
+
+			// This should be called BEFORE any PHP-internal code
+			// many PHP functions check whether there is an uncaught exception and work differently
+			// Ideal way would be to save this exception and properly access all possible fields within Lua
+			// and pass it to PHP if Lua didn't handle this error. Let's try with the ideal approach somewhere later
+			zend_clear_exception();
+
+			zend_call_method_with_0_params(&exception, Z_OBJCE_P(&exception), NULL, "getmessage", &tmp);
+			if (Z_TYPE(tmp) != IS_STRING) {
+				zend_error(E_WARNING, "%s::getMessage() must return a string", ZSTR_VAL(Z_OBJCE_P(&exception)->name));
+				lua_pushfstring(L, "Exception of type %s has been thrown in PHP", ZSTR_VAL(Z_OBJCE_P(&exception)->name));
+			} else {
+				lua_pushlstring(L, Z_STRVAL(tmp), Z_STRLEN(tmp));
+			}
+
+			for (i = 0; i<arg_num; i++) {
+				zval_ptr_dtor(&params[i]);
+			}
+			efree(params);
+			zval_ptr_dtor(&tmp);
+			zval_ptr_dtor(&exception);
+
+			// this method actually doesn't return,
+			// it's a Lua's notation to use it within return statement
+			return lua_error(L);
+		}
+
 		php_lua_send_zval_to_lua(L, &retval);
 
 		for (i = 0; i<arg_num; i++) {
 			zval_ptr_dtor(&params[i]);
-			
 		}
 		efree(params);
 		zval_ptr_dtor(&retval);
+
 		return 1;
 	}
 
