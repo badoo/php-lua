@@ -25,6 +25,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "Zend/zend_exceptions.h"
+#include "Zend/zend_interfaces.h"
 #include "php_lua.h"
 #include "lua_closure.h"
 
