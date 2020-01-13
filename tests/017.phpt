@@ -1,5 +1,5 @@
 --TEST--
-PHP Object to lua
+Catch Exception from PHP callback 
 --SKIPIF--
 <?php if (!extension_loaded("lua")) print "skip"; ?>
 --FILE--
