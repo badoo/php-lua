@@ -6,7 +6,7 @@ Set and read properties
 <?php 
 $l = new lua();
 $l->a = "foobar";
-$l->b = 12;
+$l->b = 12.0;
 var_dump($l->b);
 var_dump($l->a);
 
