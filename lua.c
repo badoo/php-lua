@@ -317,6 +317,7 @@ static int php_lua_call_callback(lua_State *L) {
 				zval_ptr_dtor(&params[i]);
 			}
 			efree(params);
+			zval_ptr_dtor(&retval);
 			zval_ptr_dtor(&tmp);
 			zval_ptr_dtor(&exception);
 
@@ -348,7 +349,15 @@ zval *php_lua_get_zval_from_lua(lua_State *L, int index, zval *lua_obj, zval *rv
 			ZVAL_BOOL(rv, lua_toboolean(L, index));
 			break;
 		case LUA_TNUMBER:
+#if LUA_VERSION_NUM >= 503
+			if (lua_isinteger(L, index)) {
+				ZVAL_LONG(rv, lua_tonumber(L, index));
+			} else {
+				ZVAL_DOUBLE(rv, lua_tonumber(L, index));
+			}
+#else
 			ZVAL_DOUBLE(rv, lua_tonumber(L, index));
+#endif
 			break;
 		case LUA_TSTRING:
 			{
@@ -380,8 +389,10 @@ zval *php_lua_get_zval_from_lua(lua_State *L, int index, zval *lua_obj, zval *rv
 
 				switch (Z_TYPE(key)) {
 					case IS_DOUBLE:
-					case IS_LONG:
 						add_index_zval(rv, Z_DVAL(key), &val);
+						break;
+					case IS_LONG:
+						add_index_zval(rv, Z_LVAL(key), &val);
 						break;
 					case IS_STRING:
 						add_assoc_zval(rv, Z_STRVAL(key), &val);
@@ -439,9 +450,15 @@ try_again:
 		case IS_DOUBLE:
 			lua_pushnumber(L, Z_DVAL_P(val));
 			break;
-		case IS_LONG:
-			lua_pushnumber(L, Z_LVAL_P(val));
+		case IS_LONG: {
+			zend_long value = Z_LVAL_P(val);
+			if (LUA_MININTEGER <= value && value <= LUA_MAXINTEGER) {
+				lua_pushinteger(L, value);
+			} else {
+				lua_pushnumber(L, value);
+			}
 			break;
+		}
 		case IS_STRING:
 			lua_pushlstring(L, Z_STRVAL_P(val), Z_STRLEN_P(val));
 			break;
@@ -866,6 +883,13 @@ PHP_METHOD(lua, getVersion) {
 }
 /* }}} */
 
+/** {{{ proto Lua::getVersionInt()
+*/
+PHP_METHOD(lua, getVersionInt) {
+	RETURN_LONG(LUA_VERSION_NUM);
+}
+/* }}} */
+
 /** {{{ proto Lua::__construct()
 */
 PHP_METHOD(lua, __construct) {
@@ -890,6 +914,7 @@ zend_function_entry lua_class_methods[] = {
 	PHP_ME(lua, call,				arginfo_lua_call,  		ZEND_ACC_PUBLIC)
 	PHP_ME(lua, assign,				arginfo_lua_assign,		ZEND_ACC_PUBLIC)
 	PHP_ME(lua, getVersion,			NULL, 					ZEND_ACC_PUBLIC|ZEND_ACC_ALLOW_STATIC)
+	PHP_ME(lua, getVersionInt,		NULL, 					ZEND_ACC_PUBLIC|ZEND_ACC_ALLOW_STATIC|ZEND_ACC_STATIC)
 	PHP_ME(lua, registerCallback,	arginfo_lua_register, 	ZEND_ACC_PUBLIC)
 	PHP_MALIAS(lua, __call, call, 	arginfo_lua_call,		ZEND_ACC_PUBLIC)
 	PHP_FE_END

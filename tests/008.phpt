@@ -9,7 +9,7 @@ $l = new lua();
 
 class A {
    public static function intro($foo, $bar) {
-		echo $foo, $bar;
+		echo '1: ', $foo, $bar, "\n";
   }
 }   
     
@@ -22,7 +22,7 @@ CODE
 
 Class B {
 	public function intro(array $bar) {
-			echo join(",", $bar);
+			echo '2: ', join(",", $bar), "\n";
 	}
 }
 
@@ -38,4 +38,6 @@ CODE
 );
 ?>
 --EXPECTF--
-foobarfoo,barstring(5) "maybe"
+1: foobar
+2: foo,bar
+string(5) "maybe"

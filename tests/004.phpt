@@ -9,10 +9,10 @@ $l = new lua();
 $l->eval(<<<CODE
 a = nil
 b = false
-c = 23
-d = -432
+c = 23.0
+d = -432.0
 e = 432.432
-f = 0
+f = 0.0
 g = 14.3e24
 h = "foobar"
 i = ""
